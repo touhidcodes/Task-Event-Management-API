@@ -226,17 +226,6 @@ const getSingleEvent = async (eventId: number) => {
   return result;
 };
 
-// // Get events created by the authenticated user
-// const getMyEvents = async (eventId: number) => {
-//   const result = await prisma.event.findMany({
-//     where: {
-//       id: eventId,
-//     },
-//   });
-//   return result;
-// };
-
-// Update an existing event by ID
 const updateEvent = async (
   eventId: number,
   eventData: TUpdateEventData
@@ -345,18 +334,18 @@ const updateEvent = async (
   return updatedEvent;
 };
 
-// // Delete an event by setting it as unavailable
-// const deleteEvent = async (eventId: number) => {
-//   const result = await prisma.event.update({
-//     where: {
-//       id: eventId,
-//     },
-//     data: {
-//       isDeleted: true,
-//     },
-//   });
-//   return result;
-// };
+// Delete an event by setting it as unavailable
+const deleteEvent = async (eventId: number) => {
+  const result = await prisma.event.update({
+    where: {
+      id: eventId,
+    },
+    data: {
+      isDeleted: true,
+    },
+  });
+  return result;
+};
 
 // // Add a participant to an event
 // const addParticipant = async (eventId: number, email: string) => {
@@ -384,9 +373,8 @@ export const eventServices = {
   createEvent,
   getEvents,
   getSingleEvent,
-  // getMyEvents,
   updateEvent,
-  // deleteEvent,
+  deleteEvent,
   // addParticipant,
   // removeParticipant,
 };

@@ -50,18 +50,6 @@ const getSingleEvent = catchAsync(async (req, res) => {
   });
 });
 
-// // Get events created by the authenticated user
-// const getMyEvents = catchAsync(async (req, res) => {
-//   const { userId } = req.user;
-//   const result = await eventServices.getMyEvents(userId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Your events retrieved successfully!",
-//     data: result,
-//   });
-// });
-
 // Update an existing event by ID
 const updateEvent = catchAsync(async (req, res) => {
   const { eventId } = req.params;
@@ -80,17 +68,23 @@ const updateEvent = catchAsync(async (req, res) => {
   });
 });
 
-// // Delete an event by ID
-// const deleteEvent = catchAsync(async (req, res) => {
-//   const { eventId } = req.params;
-//   const result = await eventServices.deleteEvent(eventId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Event deleted successfully!",
-//     data: result,
-//   });
-// });
+// Delete an event by ID
+const deleteEvent = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+
+  const eventIdNumber = parseInt(eventId, 10);
+  if (isNaN(eventIdNumber)) {
+    throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
+  }
+
+  await eventServices.deleteEvent(eventIdNumber);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Event deleted successfully!",
+    data: {},
+  });
+});
 
 // // Add a participant to an event
 // const addParticipant = catchAsync(async (req, res) => {
@@ -121,9 +115,8 @@ export const eventControllers = {
   createEvent,
   getEvents,
   getSingleEvent,
-  // getMyEvents,
   updateEvent,
-  // deleteEvent,
+  deleteEvent,
   // addParticipant,
   // removeParticipant,
 };

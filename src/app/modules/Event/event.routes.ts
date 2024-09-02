@@ -11,9 +11,6 @@ router.get("/events", eventControllers.getEvents);
 // Get details of a specific event by ID
 router.get("/events/:eventId", eventControllers.getSingleEvent);
 
-// // Get events created by the logged-in user
-// router.get("/my-events", eventControllers.getMyEvents);
-
 // Create a new event
 router.post(
   "/events",
@@ -28,8 +25,8 @@ router.put(
   eventControllers.updateEvent
 );
 
-// // Delete an event by ID
-// router.delete("/events/:eventId", eventControllers.deleteEvent);
+// Delete an event by ID
+router.delete("/events/:eventId", eventControllers.deleteEvent);
 
 // // Add participants to an event
 // router.post(
