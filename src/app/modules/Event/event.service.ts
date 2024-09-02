@@ -4,7 +4,11 @@ import { TPaginationOptions } from "../../interfaces/pagination";
 import { paginationHelper } from "../../utils/paginationHelpers";
 import { eventSearchableFields } from "./event.constants";
 import moment from "moment";
-import { TCreateEventData, TUpdateEventData } from "./event.interface";
+import {
+  TAddParticipant,
+  TCreateEventData,
+  TUpdateEventData,
+} from "./event.interface";
 import APIError from "../../errors/APIError";
 import httpStatus from "http-status";
 
@@ -347,16 +351,42 @@ const deleteEvent = async (eventId: number) => {
   return result;
 };
 
-// // Add a participant to an event
-// const addParticipant = async (eventId: number, email: string) => {
-//   const result = await prisma.participant.create({
-//     data: {
-//       eventId,
-//       email,
-//     },
-//   });
-//   return result;
-// };
+// Add a participant to an event
+const addParticipant = async ({
+  eventIdNumber,
+  participants,
+}: TAddParticipant) => {
+  // Check if event exists
+  const event = await prisma.event.findUnique({
+    where: { id: eventIdNumber },
+  });
+
+  if (!event) {
+    throw new APIError(httpStatus.NOT_FOUND, "Event not found.");
+  }
+
+  // Upsert participants and link them to the event
+  const addedParticipants = await Promise.all(
+    participants.map(async (email: string) => {
+      return prisma.participant.upsert({
+        where: { email },
+        update: {
+          event: {
+            connect: { id: eventIdNumber },
+          },
+        },
+        create: {
+          email,
+          event: {
+            connect: { id: eventIdNumber },
+          },
+        },
+      });
+    })
+  );
+
+  return addedParticipants;
+};
 
 // // Remove a participant from an event
 // const removeParticipant = async (eventId: number, participantId: number) => {
@@ -375,6 +405,6 @@ export const eventServices = {
   getSingleEvent,
   updateEvent,
   deleteEvent,
-  // addParticipant,
+  addParticipant,
   // removeParticipant,
 };

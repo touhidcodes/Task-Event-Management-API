@@ -28,12 +28,12 @@ router.put(
 // Delete an event by ID
 router.delete("/events/:eventId", eventControllers.deleteEvent);
 
-// // Add participants to an event
-// router.post(
-//   "/events/:eventId/participants",
-//   validateRequest(eventValidationSchemas.addParticipantSchema),
-//   eventControllers.addParticipant
-// );
+// Add participants to an event
+router.post(
+  "/events/:eventId/participants",
+  // validateRequest(eventValidationSchemas.addParticipantSchema),
+  eventControllers.addParticipant
+);
 
 // // Remove a participant from an event
 // router.delete(

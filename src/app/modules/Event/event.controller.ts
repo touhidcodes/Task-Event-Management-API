@@ -86,18 +86,27 @@ const deleteEvent = catchAsync(async (req, res) => {
   });
 });
 
-// // Add a participant to an event
-// const addParticipant = catchAsync(async (req, res) => {
-//   const { eventId } = req.params;
-//   const { email } = req.body; // Assuming the participant's email is sent in the request body
-//   const result = await eventServices.addParticipant(eventId, email);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Participant added successfully!",
-//     data: result,
-//   });
-// });
+// Add a participant to an event
+const addParticipant = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+  const { participants } = req.body;
+
+  const eventIdNumber = parseInt(eventId, 10);
+  if (isNaN(eventIdNumber)) {
+    throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
+  }
+
+  const result = await eventServices.addParticipant({
+    eventIdNumber,
+    participants,
+  });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Participant added successfully!",
+    data: result,
+  });
+});
 
 // // Remove a participant from an event
 // const removeParticipant = catchAsync(async (req, res) => {
@@ -117,6 +126,6 @@ export const eventControllers = {
   getSingleEvent,
   updateEvent,
   deleteEvent,
-  // addParticipant,
+  addParticipant,
   // removeParticipant,
 };

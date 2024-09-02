@@ -16,3 +16,8 @@ export interface TUpdateEventData {
   description?: string;
   participants?: string[];
 }
+
+export interface TAddParticipant {
+  eventIdNumber: number;
+  participants: string[];
+}
