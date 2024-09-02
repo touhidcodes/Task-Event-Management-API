@@ -1,139 +1,171 @@
-# Level-2 Assignment-9 Flat Mate Finder Application
+### Key Sections Explained:
 
-This is a Node.js and Express.js application with TypeScript as the programming language, integrating PostgreSQL with Prisma ORM for user data and order management. Ensure data integrity through validation using Zod.
-
-## Prerequisites
-
-Before you begin, ensure you have met the following requirements:
-
-- Node.js installed
-- Express.js installed
-- Typescript installed
-- Prisma installed
-- Zod installed
+- **Prerequisites**: Lists the necessary tools and versions required to run the project.
+- **Installation**: Step-by-step guide on how to set up the project.
+- **Environment Variables**: Instructions for configuring the `.env` file.
+- **Database Setup**: Commands to set up the database schema using Prisma.
+- **Running the Project**: How to start the server and access the API.
+- **API Endpoints**: A brief list of available endpoints for quick reference.
+- **Technologies Used**: The list of technologies are used in this project.
 
 ## Features
 
-#### Authentication
+- Create, update, and delete events
+- Add and remove participants from events
+- Retrieve events and participants
+- Data validation using Zod
+- Structured error handling with custom error classes
 
-- User Registration and Login
-- JWT (JSON Web Tokens) is used for secure authentication.
+## Prerequisites
 
-#### CRUD Operations
+- Node.js (v14.x or higher)
+- npm or Yarn package manager
+- MySQL server
 
-- Add, update, and view flats in the inventory.
-- Robust filtering system for effective flat selection.
-- Add, update, and view users and profiles.
-- Add, update, and view booking.
-
-## Getting Started
-
-Follow these steps to get your project up and running:
+## Installation
 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/touhidcodes/Level-2-Assignment-9-Flat-Mate-Finder-App-Server
+   git clone https://github.com/touhidcodes/Task-Event-Management-API
+   cd Task-Event-Management-API
    ```
 
-2. **Navigate to the project folder:**
+2. **Install Dependencies:**
 
-```
-cd your-repository
-```
+   ```bash
+   npm install
+   # or
+   yarn install
 
-3. **Install dependencies:**
+   ```
 
-```
-npm install
-```
+3. **Start the server:**
 
-4. **Configure environment variables:**
-   Create a .env file in the project root and configure any necessary environment variables. For example:
-
-```
-NODE_ENV="development"
-PORT=5000
-DATABASE_URL="your database url"
-ACCESS_TOKEN_SECRET="your access token secret code"
-ACCESS_TOKEN_EXPIRES_IN="30d"
-REFRESH_TOKEN_SECRET="your refresh token secret code"
-REFRESH_TOKEN_EXPIRES_IN="30d"
-RESET_PASS_TOKEN="your reset pass token secret code"
-RESET_PASS_TOKEN_EXPIRES_IN="5m"
-SUPABASE_PASS="your supabase secret code"
-SUPER_ADMIN_EMAIL= "super admin email"
-SUPER_ADMIN_USERNAME="super admin username"
+```bash
+  npm run dev
 ```
 
-3. **Run the application:**
+## Environment Variables:
 
+Create a .env file in the root of your project (example in `env.example`) and add the following environment variables:
+
+```bash
+ DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DATABASE_NAME
+ PORT=5000
 ```
+
+Replace `USER`, `PASSWORD`, `HOST`, `PORT`, and `DATABASE_NAME` with your MySQL database credentials.
+
+## Database Setup:
+
+#### 1. Migrate the database schema using Prisma:
+
+Before running the migration, make sure your MySQL server is running and the credentials in your .env file are correct.
+
+```bash
+ npx prisma migrate dev --name init
+```
+
+#### 2. Generate Prisma Client:
+
+Generate the Prisma client to interact with your database.
+
+```bash
+npx prisma generate
+```
+
+## Running the Project:
+
+#### 1. Start the server:
+
+```bash
 npm run dev
+# or
+yarn dev
 ```
 
-Your application should now be running at http://localhost:5000.
+#### Access the API:
 
-## Live URLs
+The server will run on http://localhost:5000 by default, or the port specified in your `.env` file.
 
-#### Live API URL: https://flat-sharing-app.vercel.app
+## API Endpoints
 
-## API Endpoints:
+#### Create Event
 
-#### Auth APIs:
-
-- Login: https://flat-sharing-app.vercel.app/api/login
-- Register: https://flat-sharing-app.vercel.app/api/register
-
-#### User APIs:
-
-- Get User Profile: https://flat-sharing-app.vercel.app/api/profile
-- Update Profile: https://flat-sharing-app.vercel.app/api/profile
-
-#### Flat APIs:
-
-- Get Flats: https://flat-sharing-app.vercel.app/api/flats
-- Create Flat: https://flat-sharing-app.vercel.app/api/flats
-- Update Flat: https://flat-sharing-app.vercel.app/api/flats/:flatId
-
-#### Booking APIs:
-
-- Get Booking Request: https://flat-sharing-app.vercel.app/api/booking-requests
-- Flat Booking Request: https://flat-sharing-app.vercel.app/api/booking-applications
-- Update Booking Request: https://flat-sharing-app.vercel.app/api/booking-requests/:bookingId
-
-## Project Dependencies
-
-#### Dependencies List
-
-```
- "dependencies": {
-"@prisma/client": "^5.11.0",
-    "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
-    "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "http-status": "^1.7.4",
-    "jsonwebtoken": "^9.0.2",
-    "ts-node-dev": "^2.0.0",
-    "zod": "^3.22.4"
-  },
+```http
+  POST /api/events
 ```
 
-#### Dev Dependencies List
+#### Get All Events:
 
+```http
+  GET /api/events
 ```
- "devDependencies": {
-  "@types/bcrypt": "^5.0.2",
-    "@types/cookie-parser": "^1.4.7",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.12.2",
-    "prisma": "^5.11.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.4.3"
-    }
+
+#### Get Single Event:
+
+```http
+  GET /api/events/:eventId
 ```
+
+| Parameter | Type  | Description                         |
+| :-------- | :---- | :---------------------------------- |
+| `eventId` | `Int` | **Required**. Id of events to fetch |
+
+#### Update Event:
+
+```http
+  PATCH /api/events/:eventId
+```
+
+| Parameter | Type  | Description                         |
+| :-------- | :---- | :---------------------------------- |
+| `eventId` | `Int` | **Required**. Id of events to fetch |
+
+#### Delete Event:
+
+```http
+  DELETE /api/events/:eventId
+```
+
+| Parameter | Type  | Description                         |
+| :-------- | :---- | :---------------------------------- |
+| `eventId` | `Int` | **Required**. Id of events to fetch |
+
+#### Add Participant:
+
+```http
+  POST /api/events/:id/participants
+```
+
+| Parameter | Type  | Description                         |
+| :-------- | :---- | :---------------------------------- |
+| `id`      | `Int` | **Required**. Id of events to fetch |
+
+#### Remove Participant:
+
+```http
+  DELETE /api/events/:id/participants/:participantId
+```
+
+| Parameter        | Type  | Description                                          |
+| :--------------- | :---- | :--------------------------------------------------- |
+| `id`             | `Int` | **Required**. Id of events to fetch                  |
+| `participantsId` | `Int` | **Required**. participantId of participants to fetch |
+
+## Technologies Used
+
+**1. Node.js:** JavaScript runtime
+
+**2. Express:** Web framework
+
+**3. Prisma:** ORM for database interactions
+
+**4. MySQL:** Relational database
+
+**5. Zod:** Schema validation
+
+**6. TypeScript:** Static typing for JavaScript
+
+**7. dotenv:** Environment variable management
