@@ -202,15 +202,29 @@ const getEvents = async (params: any, options: TPaginationOptions) => {
   };
 };
 
-// // Get a single event by ID
-// const getSingleEvent = async (eventId: number) => {
-//   const result = await prisma.event.findUniqueOrThrow({
-//     where: {
-//       id: eventId,
-//     },
-//   });
-//   return result;
-// };
+// Get a single event by ID
+const getSingleEvent = async (eventId: number) => {
+  const result = await prisma.event.findUniqueOrThrow({
+    where: {
+      id: eventId,
+    },
+    select: {
+      id: true,
+      name: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      location: true,
+      description: true,
+      participants: {
+        select: {
+          email: true,
+        },
+      },
+    },
+  });
+  return result;
+};
 
 // // Get events created by the authenticated user
 // const getMyEvents = async (eventId: number) => {
@@ -369,7 +383,7 @@ const updateEvent = async (
 export const eventServices = {
   createEvent,
   getEvents,
-  // getSingleEvent,
+  getSingleEvent,
   // getMyEvents,
   updateEvent,
   // deleteEvent,

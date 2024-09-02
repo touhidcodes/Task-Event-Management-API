@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/events", eventControllers.getEvents);
 
 // Get details of a specific event by ID
-// router.get("/events/:eventId", eventControllers.getSingleEvent);
+router.get("/events/:eventId", eventControllers.getSingleEvent);
 
 // // Get events created by the logged-in user
 // router.get("/my-events", eventControllers.getMyEvents);

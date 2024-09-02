@@ -32,17 +32,23 @@ const getEvents = catchAsync(async (req, res) => {
   });
 });
 
-// // Get a specific event by ID
-// const getSingleEvent = catchAsync(async (req, res) => {
-//   const { eventId } = req.params;
-//   const result = await eventServices.getSingleEvent(eventId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Event retrieved successfully!",
-//     data: result,
-//   });
-// });
+// Get a specific event by ID
+const getSingleEvent = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+
+  const eventIdNumber = parseInt(eventId, 10);
+  if (isNaN(eventIdNumber)) {
+    throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
+  }
+
+  const result = await eventServices.getSingleEvent(eventIdNumber);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Event retrieved successfully!",
+    data: result,
+  });
+});
 
 // // Get events created by the authenticated user
 // const getMyEvents = catchAsync(async (req, res) => {
@@ -60,10 +66,7 @@ const getEvents = catchAsync(async (req, res) => {
 const updateEvent = catchAsync(async (req, res) => {
   const { eventId } = req.params;
 
-  // Convert eventId to a number
   const eventIdNumber = parseInt(eventId, 10);
-
-  // Validate eventId
   if (isNaN(eventIdNumber)) {
     throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
   }
@@ -117,7 +120,7 @@ const updateEvent = catchAsync(async (req, res) => {
 export const eventControllers = {
   createEvent,
   getEvents,
-  // getSingleEvent,
+  getSingleEvent,
   // getMyEvents,
   updateEvent,
   // deleteEvent,
