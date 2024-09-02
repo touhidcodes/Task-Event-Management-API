@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import queryPickers from "../../utils/queryPickers";
-import { eventFilterableFields } from "./event.constants";
+import { eventFilterableFields, eventQueryOptions } from "./event.constants";
 import { eventServices } from "./event.service";
 
 // Create a new event
@@ -16,25 +16,20 @@ const createEvent = catchAsync(async (req, res) => {
   });
 });
 
-// // Get all events with filters and pagination
-// const getEvents = catchAsync(async (req, res) => {
-//   const filters = queryPickers(req.query, eventFilterableFields);
-//   const options = queryPickers(req.query, [
-//     "limit",
-//     "page",
-//     "sortBy",
-//     "sortOrder",
-//   ]);
+// Get all events with filters and pagination
+const getEvents = catchAsync(async (req, res) => {
+  const filters = queryPickers(req.query, eventFilterableFields);
+  const options = queryPickers(req.query, eventQueryOptions);
 
-//   const result = await eventServices.getEvents(filters, options);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Events retrieved successfully!",
-//     meta: result.meta,
-//     data: result.data,
-//   });
-// });
+  const result = await eventServices.getEvents(filters, options);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Events retrieved successfully!",
+    meta: result.meta,
+    data: result.data,
+  });
+});
 
 // // Get a specific event by ID
 // const getSingleEvent = catchAsync(async (req, res) => {
@@ -111,7 +106,7 @@ const createEvent = catchAsync(async (req, res) => {
 
 export const eventControllers = {
   createEvent,
-  // getEvents,
+  getEvents,
   // getSingleEvent,
   // getMyEvents,
   // updateEvent,

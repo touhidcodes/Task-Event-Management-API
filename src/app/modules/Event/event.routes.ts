@@ -6,8 +6,8 @@ import validateRequest from "../../middlewares/validateRequest";
 
 const router = express.Router();
 
-// // Get all events with pagination
-// router.get("/events", eventControllers.getEvents);
+// Get all events with pagination
+router.get("/events", eventControllers.getEvents);
 
 // // Get details of a specific event by ID
 // router.get("/events/:eventId", eventControllers.getSingleEvent);

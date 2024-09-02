@@ -7,3 +7,5 @@ export const eventSearchableFields: string[] = [
 
 // for all filtering
 export const eventFilterableFields: string[] = ["searchTerm"];
+
+export const eventQueryOptions = ["limit", "page", "sortBy", "sortOrder"];

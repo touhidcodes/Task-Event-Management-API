@@ -5,6 +5,8 @@ import { paginationHelper } from "../../utils/paginationHelpers";
 import { eventSearchableFields } from "./event.constants";
 import moment from "moment";
 import { TCreateEventData } from "./event.interface";
+import APIError from "../../errors/APIError";
+import httpStatus from "http-status";
 
 const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
   const {
@@ -19,16 +21,25 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
 
   // Validate date and time formats
   if (!moment(date, "YYYY-MM-DD", true).isValid()) {
-    throw new Error("Invalid date format. Please use YYYY-MM-DD.");
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Invalid date format. Please use YYYY-MM-DD."
+    );
   }
   if (
     !moment(startTime, "HH:mm", true).isValid() ||
     !moment(endTime, "HH:mm", true).isValid()
   ) {
-    throw new Error("Invalid time format. Please use HH:mm.");
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Invalid time format. Please use HH:mm."
+    );
   }
   if (!moment(startTime, "HH:mm").isBefore(moment(endTime, "HH:mm"))) {
-    throw new Error("Start time must be before end time.");
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Start time must be before end time."
+    );
   }
 
   // Convert date and time to full Date object
@@ -42,6 +53,7 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
   const conflictingEvent = await prisma.event.findFirst({
     where: {
       location,
+      date: moment(date).toDate(),
       AND: [
         {
           OR: [
@@ -72,11 +84,17 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
   });
 
   if (conflictingEvent) {
-    throw new Error("Time conflict with another event at the same location.");
+    throw new APIError(
+      httpStatus.CONFLICT,
+      "Time conflict with another event at the same location."
+    );
   }
 
   if (conflictingEvent) {
-    throw new Error("Time conflict with another event at the same location.");
+    throw new APIError(
+      httpStatus.CONFLICT,
+      "Time conflict with another event at the same location."
+    );
   }
 
   // Use a transaction to create the event and participants together
@@ -111,66 +129,85 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
   return newEvent;
 };
 
-// // Get all events with optional filters and pagination
-// const getEvents = async (params: any, options: TPaginationOptions) => {
-//   const { page, limit, skip } = paginationHelper.calculatePagination(options);
-//   const { searchTerm, eventDate, location, ...filterData } = params;
+// Get all events with optional filters and pagination
+const getEvents = async (params: any, options: TPaginationOptions) => {
+  const { page, limit, skip } = paginationHelper.calculatePagination(options);
+  const { searchTerm, eventDate, location, ...filterData } = params;
 
-//   const andConditions: Prisma.EventWhereInput[] = [];
+  const andConditions: Prisma.EventWhereInput[] = [];
 
-//   // Search term conditions
-//   if (searchTerm) {
-//     andConditions.push({
-//       OR: eventSearchableFields.map((field) => ({
-//         [field]: {
-//           contains: searchTerm,
-//           mode: "insensitive",
-//         },
-//       })),
-//     });
-//   }
+  // Exclude deleted events
+  andConditions.push({
+    isDeleted: false,
+  });
 
-//   // Additional filters
-//   if (Object.keys(filterData).length > 0) {
-//     andConditions.push({
-//       AND: Object.keys(filterData).map((key) => ({
-//         [key]: {
-//           equals: (filterData as any)[key],
-//         },
-//       })),
-//     });
-//   }
+  // Search term conditions
+  if (searchTerm) {
+    andConditions.push({
+      OR: eventSearchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
 
-//   const whereConditions: Prisma.EventWhereInput =
-//     andConditions.length > 0 ? { AND: andConditions } : {};
+  // Additional filters
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
 
-//   const result = await prisma.event.findMany({
-//     where: whereConditions,
-//     skip,
-//     take: limit,
-//     orderBy:
-//       options.sortBy && options.sortOrder
-//         ? {
-//             [options.sortBy]: options.sortOrder,
-//           }
-//         : {
-//             createdAt: "desc",
-//           },
-//   });
+  const whereConditions: Prisma.EventWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
 
-//   const total = await prisma.event.count({
-//     where: whereConditions,
-//   });
+  const result = await prisma.event.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? {
+            [options.sortBy]: options.sortOrder,
+          }
+        : {
+            createdAt: "desc",
+          },
+    select: {
+      id: true,
+      name: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      location: true,
+      description: true,
+      participants: {
+        select: {
+          email: true,
+        },
+      },
+    },
+  });
 
-//   return {
-//     meta: {
-//       page,
-//       limit,
-//       total,
-//     },
-//     data: result,
-//   };
-// };
+  const total = await prisma.event.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
+};
 
 // // Get a single event by ID
 // const getSingleEvent = async (eventId: number) => {
@@ -240,7 +277,7 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
 
 export const eventServices = {
   createEvent,
-  // getEvents,
+  getEvents,
   // getSingleEvent,
   // getMyEvents,
   // updateEvent,
