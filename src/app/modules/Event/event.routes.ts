@@ -1,6 +1,7 @@
 import express from "express";
 import { eventControllers } from "./event.controller";
 import validateRequest from "../../middlewares/validateRequest";
+import { eventValidationSchemas } from "./event.validation";
 // import { eventValidationSchemas } from "./event.validation";
 
 const router = express.Router();
@@ -14,14 +15,14 @@ router.get("/events/:eventId", eventControllers.getSingleEvent);
 // Create a new event
 router.post(
   "/events",
-  // validateRequest(eventValidationSchemas.createEventSchema),
+  validateRequest(eventValidationSchemas.createEventSchema),
   eventControllers.createEvent
 );
 
 // Update an event by ID
 router.put(
   "/events/:eventId",
-  // validateRequest(eventValidationSchemas.updateEventSchema),
+  validateRequest(eventValidationSchemas.updateEventSchema),
   eventControllers.updateEvent
 );
 
@@ -31,7 +32,7 @@ router.delete("/events/:eventId", eventControllers.deleteEvent);
 // Add participants to an event
 router.post(
   "/events/:eventId/participants",
-  // validateRequest(eventValidationSchemas.addParticipantSchema),
+  validateRequest(eventValidationSchemas.addParticipantSchema),
   eventControllers.addParticipant
 );
 

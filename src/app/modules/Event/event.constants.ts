@@ -2,7 +2,7 @@
 export const eventSearchableFields: string[] = [
   "location",
   "description",
-  "title",
+  "name",
 ];
 
 // for all filtering

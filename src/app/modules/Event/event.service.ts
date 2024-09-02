@@ -8,7 +8,6 @@ import {
   TAddParticipant,
   TCreateEventData,
   TRemoveParticipant,
-  TUpdateEventData,
 } from "./event.interface";
 import APIError from "../../errors/APIError";
 import httpStatus from "http-status";
@@ -191,6 +190,7 @@ const getEvents = async (params: any, options: TPaginationOptions) => {
       participants: {
         select: {
           email: true,
+          id: true,
         },
       },
     },
