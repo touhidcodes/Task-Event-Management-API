@@ -108,17 +108,34 @@ const addParticipant = catchAsync(async (req, res) => {
   });
 });
 
-// // Remove a participant from an event
-// const removeParticipant = catchAsync(async (req, res) => {
-//   const { eventId, participantId } = req.params;
-//   const result = await eventServices.removeParticipant(eventId, participantId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Participant removed successfully!",
-//     data: result,
-//   });
-// });
+// Remove a participant from an event
+const removeParticipant = catchAsync(async (req, res) => {
+  const { eventId, participantId } = req.params;
+
+  const eventIdNumber = parseInt(eventId, 10);
+  if (isNaN(eventIdNumber)) {
+    throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
+  }
+
+  const participantIdNumber = parseInt(participantId, 10);
+  if (isNaN(participantIdNumber)) {
+    throw new APIError(
+      httpStatus.BAD_REQUEST,
+      "Invalid participant ID format."
+    );
+  }
+
+  await eventServices.removeParticipant({
+    eventIdNumber,
+    participantIdNumber,
+  });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Participant removed successfully!",
+    data: {},
+  });
+});
 
 export const eventControllers = {
   createEvent,
@@ -127,5 +144,5 @@ export const eventControllers = {
   updateEvent,
   deleteEvent,
   addParticipant,
-  // removeParticipant,
+  removeParticipant,
 };

@@ -7,6 +7,7 @@ import moment from "moment";
 import {
   TAddParticipant,
   TCreateEventData,
+  TRemoveParticipant,
   TUpdateEventData,
 } from "./event.interface";
 import APIError from "../../errors/APIError";
@@ -111,10 +112,13 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
     // Step 2: Upsert participants and link them to the created event
     await Promise.all(
       participants.map(async (email: string) => {
-        await tx.participant.upsert({
-          where: { email },
-          update: { event: { connect: { id: createdEvent.id } } },
-          create: { email, event: { connect: { id: createdEvent.id } } },
+        await tx.participant.create({
+          data: {
+            email,
+            event: {
+              connect: { id: createdEvent.id },
+            },
+          },
         });
       })
     );
@@ -221,8 +225,12 @@ const getSingleEvent = async (eventId: number) => {
       location: true,
       description: true,
       participants: {
+        where: {
+          isDeleted: false,
+        },
         select: {
           email: true,
+          id: true,
         },
       },
     },
@@ -230,19 +238,8 @@ const getSingleEvent = async (eventId: number) => {
   return result;
 };
 
-const updateEvent = async (
-  eventId: number,
-  eventData: TUpdateEventData
-): Promise<Event> => {
-  const {
-    name,
-    date,
-    startTime,
-    endTime,
-    location,
-    description,
-    participants = [],
-  } = eventData;
+const updateEvent = async (eventId: number, eventData: Partial<Event>) => {
+  const { name, date, startTime, endTime, location, description } = eventData;
 
   // Validate date and time formats
   if (!moment(date, "YYYY-MM-DD", true).isValid()) {
@@ -306,35 +303,25 @@ const updateEvent = async (
   }
 
   // Use a transaction to update the event and participants together
-  const updatedEvent = await prisma.$transaction(async (tx) => {
-    // Step 1: Update the event
-    const updatedEvent = await tx.event.update({
-      where: { id: eventId },
-      data: {
-        name,
-        date: moment(date).toDate(),
-        startTime,
-        endTime,
-        location,
-        description,
-      },
-    });
-
-    // Step 2: Upsert participants and link them to the updated event
-    await Promise.all(
-      participants.map(async (email: string) => {
-        await tx.participant.upsert({
-          where: { email },
-          update: { event: { connect: { id: updatedEvent.id } } },
-          create: { email, event: { connect: { id: updatedEvent.id } } },
-        });
-      })
-    );
-
-    // Return the updated event
-    return updatedEvent;
+  const updatedEvent = await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      name,
+      date: moment(date).toDate(),
+      startTime,
+      endTime,
+      location,
+      description,
+    },
+    select: {
+      name: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      location: true,
+      description: true,
+    },
   });
-
   return updatedEvent;
 };
 
@@ -365,21 +352,40 @@ const addParticipant = async ({
     throw new APIError(httpStatus.NOT_FOUND, "Event not found.");
   }
 
-  // Upsert participants and link them to the event
+  // Find existing participants
+  const existingParticipants = await prisma.participant.findMany({
+    where: {
+      email: {
+        in: participants,
+      },
+    },
+    select: {
+      email: true,
+      id: true,
+    },
+  });
+
+  // Extract existing emails
+  const existingEmails = existingParticipants.map((p) => p.email);
+
+  // Filter out emails that do not exist
+  const newEmails = participants.filter(
+    (email) => !existingEmails.includes(email)
+  );
+
+  // Create new participants
   const addedParticipants = await Promise.all(
-    participants.map(async (email: string) => {
-      return prisma.participant.upsert({
-        where: { email },
-        update: {
-          event: {
-            connect: { id: eventIdNumber },
-          },
-        },
-        create: {
+    newEmails.map((email: string) => {
+      return prisma.participant.create({
+        data: {
           email,
           event: {
             connect: { id: eventIdNumber },
           },
+        },
+        select: {
+          email: true,
+          eventId: true,
         },
       });
     })
@@ -388,16 +394,43 @@ const addParticipant = async ({
   return addedParticipants;
 };
 
-// // Remove a participant from an event
-// const removeParticipant = async (eventId: number, participantId: number) => {
-//   const result = await prisma.participant.delete({
-//     where: {
-//       id: participantId,
-//       eventId: eventId,
-//     },
-//   });
-//   return result;
-// };
+// Remove a participant from an event
+const removeParticipant = async ({
+  eventIdNumber,
+  participantIdNumber,
+}: TRemoveParticipant) => {
+  const event = await prisma.event.findUnique({
+    where: { id: eventIdNumber },
+  });
+
+  if (!event) {
+    throw new APIError(httpStatus.NOT_FOUND, "Event not found.");
+  }
+
+  // Find participant by participantId and event ID
+  const participant = await prisma.participant.findFirst({
+    where: {
+      eventId: eventIdNumber,
+      id: participantIdNumber,
+    },
+  });
+
+  if (!participant) {
+    throw new APIError(httpStatus.NOT_FOUND, "Participant not found.");
+  }
+
+  // Remove participant
+  const result = await prisma.participant.update({
+    where: {
+      id: participant.id,
+    },
+    data: {
+      isDeleted: true,
+    },
+  });
+
+  return result;
+};
 
 export const eventServices = {
   createEvent,
@@ -406,5 +439,5 @@ export const eventServices = {
   updateEvent,
   deleteEvent,
   addParticipant,
-  // removeParticipant,
+  removeParticipant,
 };

@@ -25,7 +25,7 @@ model Event {
 
 model Participant {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
+  email     String
   eventId   Int
   event     Event    @relation(fields: [eventId], references: [id])
   isDeleted Boolean  @default(false)

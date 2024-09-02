@@ -35,11 +35,10 @@ router.post(
   eventControllers.addParticipant
 );
 
-// // Remove a participant from an event
-// router.delete(
-//   "/events/:eventId/participants/:participantId",
-//   auth(UserRole.ADMIN, UserRole.USER),
-//   eventControllers.removeParticipant
-// );
+// Remove a participant from an event
+router.delete(
+  "/events/:eventId/participants/:participantId",
+  eventControllers.removeParticipant
+);
 
 export const eventRoutes = router;

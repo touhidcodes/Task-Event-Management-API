@@ -21,3 +21,8 @@ export interface TAddParticipant {
   eventIdNumber: number;
   participants: string[];
 }
+
+export interface TRemoveParticipant {
+  eventIdNumber: number;
+  participantIdNumber: number;
+}
