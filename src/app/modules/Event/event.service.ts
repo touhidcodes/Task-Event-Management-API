@@ -4,7 +4,7 @@ import { TPaginationOptions } from "../../interfaces/pagination";
 import { paginationHelper } from "../../utils/paginationHelpers";
 import { eventSearchableFields } from "./event.constants";
 import moment from "moment";
-import { TCreateEventData } from "./event.interface";
+import { TCreateEventData, TUpdateEventData } from "./event.interface";
 import APIError from "../../errors/APIError";
 import httpStatus from "http-status";
 
@@ -16,7 +16,7 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
     endTime,
     location,
     description,
-    participantEmails = [],
+    participants = [],
   } = eventData;
 
   // Validate date and time formats
@@ -41,13 +41,6 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
       "Start time must be before end time."
     );
   }
-
-  // Convert date and time to full Date object
-  const eventStart = moment(
-    `${date} ${startTime}`,
-    "YYYY-MM-DD HH:mm"
-  ).toDate();
-  const eventEnd = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
 
   // Check for time conflicts with other events at the same location
   const conflictingEvent = await prisma.event.findFirst({
@@ -113,7 +106,7 @@ const createEvent = async (eventData: TCreateEventData): Promise<Event> => {
 
     // Step 2: Upsert participants and link them to the created event
     await Promise.all(
-      participantEmails.map(async (email) => {
+      participants.map(async (email: string) => {
         await tx.participant.upsert({
           where: { email },
           update: { event: { connect: { id: createdEvent.id } } },
@@ -229,16 +222,114 @@ const getEvents = async (params: any, options: TPaginationOptions) => {
 //   return result;
 // };
 
-// // Update an existing event by ID
-// const updateEvent = async (eventId: number, eventData: Partial<Event>) => {
-//   const result = await prisma.event.update({
-//     where: {
-//       id: eventId,
-//     },
-//     data: eventData,
-//   });
-//   return result;
-// };
+// Update an existing event by ID
+const updateEvent = async (
+  eventId: number,
+  eventData: TUpdateEventData
+): Promise<Event> => {
+  const {
+    name,
+    date,
+    startTime,
+    endTime,
+    location,
+    description,
+    participants = [],
+  } = eventData;
+
+  // Validate date and time formats
+  if (!moment(date, "YYYY-MM-DD", true).isValid()) {
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Invalid date format. Please use YYYY-MM-DD."
+    );
+  }
+  if (
+    !moment(startTime, "HH:mm", true).isValid() ||
+    !moment(endTime, "HH:mm", true).isValid()
+  ) {
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Invalid time format. Please use HH:mm."
+    );
+  }
+  if (!moment(startTime, "HH:mm").isBefore(moment(endTime, "HH:mm"))) {
+    throw new APIError(
+      httpStatus.NOT_ACCEPTABLE,
+      "Start time must be before end time."
+    );
+  }
+
+  // Check for time conflicts with other events at the same location
+  const conflictingEvent = await prisma.event.findFirst({
+    where: {
+      location,
+      date: moment(date).toDate(),
+
+      AND: [
+        {
+          OR: [
+            {
+              startTime: { lte: moment(endTime, "HH:mm").format("HH:mm") },
+              endTime: { gte: moment(startTime, "HH:mm").format("HH:mm") },
+            },
+            {
+              startTime: { gte: moment(startTime, "HH:mm").format("HH:mm") },
+              endTime: { lte: moment(endTime, "HH:mm").format("HH:mm") },
+            },
+            {
+              startTime: { lte: moment(startTime, "HH:mm").format("HH:mm") },
+              endTime: { gte: moment(startTime, "HH:mm").format("HH:mm") },
+            },
+            {
+              startTime: { lte: moment(endTime, "HH:mm").format("HH:mm") },
+              endTime: { gte: moment(endTime, "HH:mm").format("HH:mm") },
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  if (conflictingEvent) {
+    throw new APIError(
+      httpStatus.CONFLICT,
+      "Time conflict with another event at the same location."
+    );
+  }
+
+  // Use a transaction to update the event and participants together
+  const updatedEvent = await prisma.$transaction(async (tx) => {
+    // Step 1: Update the event
+    const updatedEvent = await tx.event.update({
+      where: { id: eventId },
+      data: {
+        name,
+        date: moment(date).toDate(),
+        startTime,
+        endTime,
+        location,
+        description,
+      },
+    });
+
+    // Step 2: Upsert participants and link them to the updated event
+    await Promise.all(
+      participants.map(async (email: string) => {
+        await tx.participant.upsert({
+          where: { email },
+          update: { event: { connect: { id: updatedEvent.id } } },
+          create: { email, event: { connect: { id: updatedEvent.id } } },
+        });
+      })
+    );
+
+    // Return the updated event
+    return updatedEvent;
+  });
+
+  return updatedEvent;
+};
 
 // // Delete an event by setting it as unavailable
 // const deleteEvent = async (eventId: number) => {
@@ -280,7 +371,7 @@ export const eventServices = {
   getEvents,
   // getSingleEvent,
   // getMyEvents,
-  // updateEvent,
+  updateEvent,
   // deleteEvent,
   // addParticipant,
   // removeParticipant,

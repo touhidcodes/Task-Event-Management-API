@@ -4,6 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import queryPickers from "../../utils/queryPickers";
 import { eventFilterableFields, eventQueryOptions } from "./event.constants";
 import { eventServices } from "./event.service";
+import APIError from "../../errors/APIError";
 
 // Create a new event
 const createEvent = catchAsync(async (req, res) => {
@@ -55,17 +56,26 @@ const getEvents = catchAsync(async (req, res) => {
 //   });
 // });
 
-// // Update an existing event by ID
-// const updateEvent = catchAsync(async (req, res) => {
-//   const { eventId } = req.params;
-//   const result = await eventServices.updateEvent(eventId, req.body);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Event updated successfully!",
-//     data: result,
-//   });
-// });
+// Update an existing event by ID
+const updateEvent = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+
+  // Convert eventId to a number
+  const eventIdNumber = parseInt(eventId, 10);
+
+  // Validate eventId
+  if (isNaN(eventIdNumber)) {
+    throw new APIError(httpStatus.BAD_REQUEST, "Invalid event ID format.");
+  }
+
+  const result = await eventServices.updateEvent(eventIdNumber, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Event updated successfully!",
+    data: result,
+  });
+});
 
 // // Delete an event by ID
 // const deleteEvent = catchAsync(async (req, res) => {
@@ -109,7 +119,7 @@ export const eventControllers = {
   getEvents,
   // getSingleEvent,
   // getMyEvents,
-  // updateEvent,
+  updateEvent,
   // deleteEvent,
   // addParticipant,
   // removeParticipant,

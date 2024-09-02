@@ -1,9 +1,18 @@
 export interface TCreateEventData {
   name: string;
-  date: string; // expects date in "YYYY-MM-DD" format
-  startTime: string; // expects time in "HH:mm" format
-  endTime: string; // expects time in "HH:mm" format
+  date: string;
+  startTime: string;
+  endTime: string;
   location: string;
   description: string;
-  participantEmails?: string[]; // optional array of participant emails
+  participants?: string[];
+}
+export interface TUpdateEventData {
+  name?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  description?: string;
+  participants?: string[];
 }

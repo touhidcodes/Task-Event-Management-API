@@ -1,15 +1,14 @@
 import express from "express";
-import auth from "../../middlewares/auth";
-import { eventControllers } from "./event.controller"; // Adjust the path as necessary
+import { eventControllers } from "./event.controller";
 import validateRequest from "../../middlewares/validateRequest";
 // import { eventValidationSchemas } from "./event.validation";
 
 const router = express.Router();
 
-// Get all events with pagination
+// Get all events with pagination and query params
 router.get("/events", eventControllers.getEvents);
 
-// // Get details of a specific event by ID
+// Get details of a specific event by ID
 // router.get("/events/:eventId", eventControllers.getSingleEvent);
 
 // // Get events created by the logged-in user
@@ -22,12 +21,12 @@ router.post(
   eventControllers.createEvent
 );
 
-// // Update an event by ID
-// router.put(
-//   "/events/:eventId",
-//   validateRequest(eventValidationSchemas.updateEventSchema),
-//   eventControllers.updateEvent
-// );
+// Update an event by ID
+router.put(
+  "/events/:eventId",
+  // validateRequest(eventValidationSchemas.updateEventSchema),
+  eventControllers.updateEvent
+);
 
 // // Delete an event by ID
 // router.delete("/events/:eventId", eventControllers.deleteEvent);
